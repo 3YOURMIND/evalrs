@@ -1,3 +1,4 @@
+pub mod dummy_backend;
 pub mod local_memory_backend;
 mod test_local_memory_backend;
 
