@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - dummy_cache_backend
   workflow_dispatch:
 
 env:
