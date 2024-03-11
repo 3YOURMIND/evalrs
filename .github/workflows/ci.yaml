@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - strace
   workflow_dispatch:
 
 env:
