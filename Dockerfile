@@ -19,8 +19,10 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 RUN rustup update
 RUN cargo build --release
 
-FROM gcr.io/distroless/cc-debian12:nonroot as runtime
+FROM debian:latest as runtime
+RUN apt-get update && apt-get install strace
+RUN strace ls -l
 WORKDIR /
 COPY --from=builder /app/target/release/evalrs /
 COPY --from=builder /app/config /config
-ENTRYPOINT ["./evalrs"]
+ENTRYPOINT ["strace", "./evalrs"]
