@@ -5,8 +5,7 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:latest as runtime
-RUN apt-get update && apt-get install strace
-RUN strace ls -l
+RUN apt-get update && apt-get install -y strace
 WORKDIR /
 COPY --from=builder /app/target/release/evalrs /
 COPY --from=builder /app/config /config
