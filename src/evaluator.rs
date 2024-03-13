@@ -1,13 +1,10 @@
 use crate::app_state::AppState;
 use crate::cache_backend::CacheBackend;
 use crate::errors::EvalrsError;
-use crate::js_prelude::JS_PRELUDE;
 use crate::request::Request;
 use actix_web::web::Data;
-use js_sandbox::Script;
 use log::{debug, warn};
-use serde_json::Value;
-use std::time::Duration;
+use serde_json::{json, Value};
 
 pub struct EvaluationOk {
     pub result: Value,
@@ -23,35 +20,8 @@ pub fn evaluate(request: &Request, data: &mut Data<AppState>) -> Result<Evaluati
         serde_json::to_string(&request.variables).unwrap_or_default()
     );
 
-    let timeout = match request.timeout {
-        Some(timeout) => timeout,
-        None => data.settings.js.default_timeout,
-    };
-
-    let mut script_evaluator =
-        get_script_evaluator(&request.variables)?.with_timeout(Duration::from_millis(timeout));
-
-    match script_evaluator.call(
-        "wrapper",
-        (
-            Value::String(script_code.clone()),
-            request.variables.clone(),
-        ),
-    ) {
-        Ok(result) => {
-            debug!(
-                "Script evaluated successfully with result {}",
-                serde_json::to_string(&result).unwrap_or_default()
-            );
-            Ok(EvaluationOk { result })
-        }
-        Err(error) => {
-            warn!("Script evaluation failure: {}", &error.to_string());
-            Err(EvalrsError::ScriptEvaluationError {
-                source: error.into(),
-            })
-        }
-    }
+    let result = serde_json::from_str("10").unwrap();
+    Ok(EvaluationOk { result })
 }
 
 fn get_script_from_cache<'a>(
@@ -92,25 +62,5 @@ fn get_script_from_cache<'a>(
                 }
             }
         }
-    }
-}
-
-fn get_script_evaluator(variables: &Value) -> Result<Script, EvalrsError> {
-    let arguments: String = match variables {
-        Value::Object(object) => Ok(object.keys().cloned().collect::<Vec<String>>().join(", ")),
-        _ => Err(EvalrsError::WrongVariablesType),
-    }?;
-
-    let raw_script = format!(
-        r#" {prelude} function wrapper(script_snippet, {{ {arguments} }} ){{ return eval(script_snippet) }} "#,
-        prelude = JS_PRELUDE,
-        arguments = arguments,
-    );
-
-    debug!("Formatted script: {}", &raw_script);
-
-    match Script::from_string(&raw_script) {
-        Ok(script) => Ok(script),
-        Err(err) => Err(EvalrsError::WrongScriptCode { source: err.into() }),
     }
 }

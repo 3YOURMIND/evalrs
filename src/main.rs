@@ -9,7 +9,6 @@ mod cache_backend;
 mod errors;
 mod evaluator;
 mod handlers;
-mod js_prelude;
 mod request;
 mod response;
 mod settings;
