@@ -2,11 +2,12 @@ FROM rust:1.76 as builder
 WORKDIR /app
 RUN rustup update
 COPY . .
-RUN cargo build --release
+RUN cargo build
 
 FROM debian:latest as runtime
 RUN apt-get update && apt-get install -y strace
 WORKDIR /
 COPY --from=builder /app/target/release/evalrs /
 COPY --from=builder /app/config /config
-ENTRYPOINT ["strace", "./evalrs"]
+ENV RUST_BACKTRACE=1
+ENTRYPOINT ["./evalrs"]

@@ -1,6 +1,6 @@
 [package]
 name = "evalrs"
-version = "0.1.9-strace"
+version = "0.1.11"
 authors = ["Serhii Zavadskyi <fevral13@gmail.com>"]
 edition = "2021"
 

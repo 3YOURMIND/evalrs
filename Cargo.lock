@@ -740,7 +740,7 @@ dependencies = [
 
 [[package]]
 name = "evalrs"
-version = "0.1.9-strace"
+version = "0.1.11"
 dependencies = [
  "actix-web",
  "config",
