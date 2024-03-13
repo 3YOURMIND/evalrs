@@ -1,52 +1,58 @@
-use actix_web::{middleware::Logger, web::Data, web::JsonConfig, App, HttpServer};
-use log::debug;
+use js_sandbox::Script;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+// use std::time::Duration;
+use warp::Filter;
 
-use crate::app_state::AppState;
-use crate::settings::Settings;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Request {
+    pub script: String,
+    pub variables: Value,
+    pub timeout: Option<u64>,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Response {
+    pub result: Value,
+}
 
-mod app_state;
-mod cache_backend;
-mod errors;
-mod evaluator;
-mod handlers;
-mod js_prelude;
-mod request;
-mod response;
-mod settings;
-mod templates;
-mod tests;
+#[tokio::main]
+async fn main() {
+    console_subscriber::init();
+    let echo = warp::post()
+        .and(warp::path("eval"))
+        .and(warp::body::json())
+        .map(json_echo);
 
-const DEFAULT_LIMIT: usize = 10_485_760; // 10MB
+    warp::serve(echo).run(([127, 0, 0, 1], 3030)).await
+}
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init();
-    let settings = Settings::new().expect("config can be loaded");
+fn json_echo(request: Request) -> warp::reply::Json {
+    let mut script_evaluator = get_script_evaluator(&request.variables); //.with_timeout(Duration::from_millis(1000));
 
-    debug!("Using configuration: {}", serde_json::to_string(&settings)?);
+    let result: Value = script_evaluator
+        .call(
+            "wrapper",
+            (
+                Value::String(request.script.clone()),
+                request.variables.clone(),
+            ),
+        )
+        .unwrap();
 
-    let app_state = Data::new(AppState::new(settings));
-    let _app_state = app_state.clone();
+    let response = Response { result };
+    warp::reply::json(&response)
+}
 
-    let mut server = HttpServer::new(move || {
-        App::new()
-            .app_data(JsonConfig::default().limit(DEFAULT_LIMIT))
-            .app_data(_app_state.clone())
-            .wrap(Logger::default())
-            .service(crate::handlers::evaluate_script)
-            .service(crate::handlers::index)
-            .service(crate::handlers::healthcheck)
-    });
+fn get_script_evaluator(variables: &Value) -> Script {
+    let arguments: String = match variables {
+        Value::Object(object) => object.keys().cloned().collect::<Vec<String>>().join(", "),
+        _ => "".to_string(),
+    };
 
-    if let Some(workers) = app_state.settings.workers {
-        server = server.workers(workers);
-    }
+    let raw_script = format!(
+        r#"function wrapper(script_snippet, {{ {arguments} }} ){{ return eval(script_snippet) }} "#,
+        arguments = arguments,
+    );
 
-    server
-        .bind(format!(
-            "{}:{}",
-            &app_state.settings.server.host, &app_state.settings.server.port
-        ))?
-        .run()
-        .await
+    Script::from_string(&raw_script).unwrap()
 }

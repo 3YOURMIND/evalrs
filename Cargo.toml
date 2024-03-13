@@ -1,20 +1,25 @@
 [package]
 name = "evalrs"
-version = "0.1.9-strace"
+version = "0.1.10-strace"
 authors = ["Serhii Zavadskyi <fevral13@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-actix-web = "4.5.1"
+warp = "0.3.6"
+tokio = { version = "1.36.0", features = ["full", "tracing"] }
 config = { version = "0.14.0", features = ["yaml"] }
 env_logger = "0.11.2"
-js-sandbox = "0.2.0-rc.1"
+js-sandbox = "0.2.0-rc.2"
 lru = "0.12.2"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 thiserror = "1.0.57"
 log = "0.4.20"
+console-subscriber = "0.2.0"
 
 [dependencies.tera]
 version = "1.19.1"
 default-features = false
+
+[build]
+rustflags = ["--cfg", "tokio_unstable"]
