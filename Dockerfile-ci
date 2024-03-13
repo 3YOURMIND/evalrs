@@ -9,4 +9,4 @@ RUN apt-get update && apt-get install -y strace
 WORKDIR /
 COPY --from=builder /app/target/release/evalrs /
 COPY --from=builder /app/config /config
-ENTRYPOINT ["strace", "-f", "./evalrs"]
+ENTRYPOINT ["strace", "./evalrs"]

@@ -1,6 +1,6 @@
 [package]
 name = "evalrs"
-version = "0.1.8-strace"
+version = "0.1.9-strace"
 authors = ["Serhii Zavadskyi <fevral13@gmail.com>"]
 edition = "2021"
 
@@ -8,7 +8,7 @@ edition = "2021"
 actix-web = "4.5.1"
 config = { version = "0.14.0", features = ["yaml"] }
 env_logger = "0.11.2"
-js-sandbox = "0.2.0-rc.2"
+js-sandbox = "0.2.0-rc.1"
 lru = "0.12.2"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
