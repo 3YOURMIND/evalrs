@@ -1,10 +1,10 @@
-FROM rust:1.71 as builder
+FROM rust:1.76 as builder
 WORKDIR /app
 RUN rustup update
 COPY . .
 RUN cargo build --release
 
-FROM gcr.io/distroless/cc:nonroot as runtime
+FROM gcr.io/distroless/cc-debian12:nonroot as runtime
 WORKDIR /
 COPY --from=builder /app/target/release/evalrs /
 COPY --from=builder /app/config /config
